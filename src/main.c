@@ -12,6 +12,7 @@
 #include "motor_output.h"
 #include "rate_control.h"
 #include "topic_bus.h"
+#include "gpio_timing.h"
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -182,6 +183,7 @@ static void finalize_cycle(struct control_context *ctx,
       imu_interrupt_timestamp_ns, motor_signal_timestamp_ns);
   rdd2_imu_latency_stats_update(ctx->imu_to_motor_latency_us);
   publish_flight_state(ctx);
+  rdd2_gpio_timing_end();
 }
 
 int main(void) {
@@ -218,6 +220,12 @@ int main(void) {
 
   LOG_INF("RDD2 flight stack starting");
 
+  rc = rdd2_gpio_timing_init();
+  if (rc != 0) {
+    LOG_ERR("GPIO timing setup failed: %d", rc);
+    return rc;
+  }
+
   while (true) {
     bool run_attitude_update;
     bool controller_reset_required;
@@ -230,6 +238,7 @@ int main(void) {
 
     rdd2_control_input_wait(&ctx->gyro, &ctx->accel, &ctx->rc, &ctx->status,
                             &ctx->dt, &imu_interrupt_timestamp_ns);
+    rdd2_gpio_timing_begin();
     ctx->now_ms = k_uptime_get();
 #if defined(CONFIG_RDD2_LOCKSTEP)
     /*

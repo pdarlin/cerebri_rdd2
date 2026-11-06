@@ -12,6 +12,15 @@ config PWM_FREQUENCY
     
 menu "RDD2"
 
+config RDD2_GPIO_TIMING
+    bool "Expose control-loop processing on a GPIO"
+    depends on BOARD_MR_VMU_TROPIC_MIMXRT1064 && !RDD2_LOCKSTEP
+    select GPIO
+    select PINCTRL
+    help
+      Bench instrumentation enabled by the gpio-timing snippet. The output
+      is high from input acquisition return through cycle finalization.
+
 rsource "subsys/Kconfig"
 rsource "drivers/Kconfig"
 
