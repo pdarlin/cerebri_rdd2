@@ -1,0 +1,6 @@
+name: gpio-timing
+boards:
+  mr_vmu_tropic/mimxrt1064:
+    append:
+      EXTRA_DTC_OVERLAY_FILE: gpio-timing.overlay
+      EXTRA_CONF_FILE: gpio-timing.conf

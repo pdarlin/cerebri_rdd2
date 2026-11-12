@@ -1,0 +1,12 @@
+description: Processing and IMU acquisition timing probes with explicit pad ownership
+compatible: "cognipilot,gpio-timing"
+include: [base.yaml, pinctrl-device.yaml]
+properties:
+  gpios:
+    type: phandle-array
+    required: true
+    description: Active-high processing marker
+  imu-gpios:
+    type: phandle-array
+    required: true
+    description: Active-high asynchronous IMU acquisition marker

@@ -12,6 +12,16 @@ config PWM_FREQUENCY
     
 menu "RDD2"
 
+config RDD2_GPIO_TIMING
+    bool "Expose processing and IMU acquisition on two GPIOs"
+    depends on BOARD_MR_VMU_TROPIC_MIMXRT1064 && !RDD2_LOCKSTEP
+    depends on GPIO && SENSOR_ASYNC_API && ICM45686_STREAM
+    select PINCTRL
+    help
+      Bench instrumentation enabled by the gpio-timing snippet. J7 pin 5
+      measures processing before motor output; J7 pin 4 measures an accepted
+      IMU interrupt through asynchronous acquisition completion.
+
 rsource "subsys/Kconfig"
 rsource "drivers/Kconfig"
 

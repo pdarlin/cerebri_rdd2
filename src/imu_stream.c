@@ -3,6 +3,7 @@
  */
 
 #include "imu_stream.h"
+#include "imu_gpio_timing.h"
 
 #include "rate_control.h"
 #if defined(CONFIG_RDD2_LOCKSTEP)
@@ -154,6 +155,7 @@ static void imu_stream_restart(const char *reason, int rc)
 {
 	int restart_rc;
 
+	rdd2_imu_gpio_timing_abort();
 	LOG_WRN("imu stream restart after %s: %d", reason, rc);
 
 	if (g_imu_stream_handle != NULL) {

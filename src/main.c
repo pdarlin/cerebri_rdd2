@@ -12,6 +12,7 @@
 #include "motor_output.h"
 #include "rate_control.h"
 #include "topic_bus.h"
+#include "gpio_timing.h"
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -207,6 +208,13 @@ int main(void) {
     return rc;
   }
 
+  /* Both probes must be inactive before control_io_init starts IMU streaming. */
+  rc = rdd2_gpio_timing_init();
+  if (rc != 0) {
+    LOG_ERR("GPIO timing setup failed: %d", rc);
+    return rc;
+  }
+
   rdd2_motor_output_init();
 
   rc = rdd2_control_io_init();
@@ -230,6 +238,7 @@ int main(void) {
 
     rdd2_control_input_wait(&ctx->gyro, &ctx->accel, &ctx->rc, &ctx->status,
                             &ctx->dt, &imu_interrupt_timestamp_ns);
+    rdd2_gpio_timing_begin();
     ctx->now_ms = k_uptime_get();
 #if defined(CONFIG_RDD2_LOCKSTEP)
     /*
@@ -333,6 +342,7 @@ int main(void) {
     }
 
     if (rdd2_motor_test_get(&ctx->motors)) {
+      rdd2_gpio_timing_end();
       motor_signal_timestamp_ns =
           rdd2_motor_output_write_all(&ctx->motors, true, true);
       finalize_cycle(ctx, imu_interrupt_timestamp_ns,
@@ -341,6 +351,7 @@ int main(void) {
     }
 
     if (rdd2_motor_raw_test_get(&ctx->raw_test)) {
+      rdd2_gpio_timing_end();
       motor_signal_timestamp_ns =
           rdd2_motor_output_write_all_raw(&ctx->raw_test, true);
       finalize_cycle(ctx, imu_interrupt_timestamp_ns,
@@ -349,6 +360,7 @@ int main(void) {
     }
 
     if (!ctx->status.imu_ok || ctx->rc_stale) {
+      rdd2_gpio_timing_end();
       motor_signal_timestamp_ns =
           rdd2_motor_output_write_all(&ctx->motors, false, false);
       finalize_cycle(ctx, imu_interrupt_timestamp_ns,
@@ -384,6 +396,7 @@ int main(void) {
         rdd2_rate_pid_integrate(ctx->throttle_input, ctx->status.armed),
         &ctx->rate_cmd);
     rdd2_mix_quad_x(ctx->throttle_cmd, &ctx->rate_cmd, &ctx->motors);
+    rdd2_gpio_timing_end();
     motor_signal_timestamp_ns =
         rdd2_motor_output_write_all(&ctx->motors, ctx->status.armed, false);
     finalize_cycle(ctx, imu_interrupt_timestamp_ns, motor_signal_timestamp_ns);

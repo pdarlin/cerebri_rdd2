@@ -201,3 +201,7 @@ target_include_directories(app PRIVATE
 add_subdirectory(src)
 add_subdirectory(subsys)
 add_subdirectory(drivers)
+
+if(CONFIG_RDD2_GPIO_TIMING)
+  include(cmake/ImuGpioTiming.cmake)
+endif()
